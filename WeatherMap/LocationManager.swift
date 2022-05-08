@@ -28,11 +28,25 @@ class LocationManager: NSObject {
         return manager
     }()
     
-    lazy var cacheLocation: CLLocation? = {
-        let userDefault = UserDefaults.standard
-        let location = userDefault.object(forKey: UserDefaults.CacheLocationKey) as? CLLocation
-        return location
-    }()
+    var _cacheLocation: CLLocation?
+    var cacheLocation: CLLocation? {
+        get {
+            if (_cacheLocation != nil) {
+                return _cacheLocation
+            }
+            let userDefault = UserDefaults.standard
+            _cacheLocation = CLLocation(latitude: userDefault.double(forKey: UserDefaults.CacheLocationLatKey), longitude: userDefault.double(forKey: UserDefaults.CacheLocationLonKey))
+            return _cacheLocation
+        }
+        
+        set {
+            _cacheLocation = newValue
+            let userDefault = UserDefaults.standard
+            userDefault.set(_cacheLocation?.coordinate.longitude, forKey: UserDefaults.CacheLocationLonKey)
+            userDefault.set(_cacheLocation?.coordinate.latitude, forKey: UserDefaults.CacheLocationLatKey)
+            UserDefaults.standard.synchronize()
+        }
+    }
     
     func requestLocation() throws  {
         let authorizationStatus = locManager.authorizationStatus
@@ -40,13 +54,14 @@ class LocationManager: NSObject {
         switch authorizationStatus {
         case .notDetermined:
             locManager.requestWhenInUseAuthorization()
+            locManager.requestLocation()
         case .restricted:
             throw LocationError.locationauthorizationRestricted
         case .denied:
             throw LocationError.locationauthorizationDeny
         case .authorizedAlways, .authorizedWhenInUse, .authorized:
-            print(locManager.location)
             locManager.requestLocation()
+        @unknown default: break
         }
     }
 }
@@ -56,12 +71,15 @@ extension LocationManager: CLLocationManagerDelegate {
         if let firstLocation = locations.first {
             print(firstLocation)
             location = firstLocation
+            self.cacheLocation = firstLocation
+            self.delegate?.locationManager(self, didUpdateLocations: location, cacheLocation: location, error: nil)
+            locManager.stopUpdatingLocation()
         }
-        locManager.stopUpdatingLocation()
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(error)
+        self.delegate?.locationManager(self, didUpdateLocations: nil, cacheLocation: cacheLocation, error: nil)
         locManager.stopUpdatingLocation()
     }
 }

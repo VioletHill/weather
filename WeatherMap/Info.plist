@@ -23,5 +23,10 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>we want to get your locaton</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
 </dict>
 </plist>

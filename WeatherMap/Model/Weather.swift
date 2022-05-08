@@ -2,29 +2,41 @@
 //  Weather.swift
 //  WeatherMap
 //
-//  Created by QiuFeng on 2022/5/6.
+//  Created by QiuFeng on 2022/5/7.
 //
 
 import UIKit
 
+//"id": 500,
+//"main": "Rain",
+//"description": "light rain",
+//"icon": "10d"
+
 class Weather: NSObject, Codable {
+    var conditionId: Int
+    var main: String
+    var desc: String
+    var iconUrl: URL? {
+        get {
+            return URL(string: "http://openweathermap.org/img/wn/\(self.icon)@2x.png")
+        }
+    }
     
-    /// Requested time, Unix, UTC
-    var dt: TimeInterval
-    
-    /// Sunrise time, Unix, UTC
-    var sunrise: TimeInterval
-    
-    /// Sunset time, Unix, UTC
-    var sunset: TimeInterval
-    
-    /// Temperature. Units – default: kelvin, metric: Celsius, imperial: Fahrenheit.
-    var temp: String
+    /// For code 500 - light rain icon = "10d". See below a full list of codes
+    /// URL is http://openweathermap.org/img/wn/10d@2x.png
+    var icon: String
     
     enum CodingKeys: String, CodingKey {
-        case dt
-        case sunrise
-        case sunset
-        case temp
+        case conditionId = "id"
+        case main
+        case desc = "description"
+        case icon
+    }
+    
+    init(conditionId: Int, main: String?, desc: String?, icon: String?) {
+        self.conditionId = conditionId
+        self.main = main ?? ""
+        self.desc = desc ?? ""
+        self.icon = icon ?? ""
     }
 }
